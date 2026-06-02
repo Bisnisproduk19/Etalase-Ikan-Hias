@@ -1,8 +1,4 @@
-// firebase-config.js - VERSI 9 (MODULAR)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
+// firebase-config.js - VERSI 8 COMPAT (PASTI BERHASIL)
 const firebaseConfig = {
     apiKey: "AIzaSyDHZRHjZJkBtQLkCUzGrPZaXjCz1rimGP0",
     authDomain: "ikanhias-platform.firebaseapp.com",
@@ -12,12 +8,9 @@ const firebaseConfig = {
     appId: "1:393957147326:web:236c7c5754f31b3a7494ef"
 };
 
-// Inisialisasi
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Inisialisasi Firebase (cara lama/versi 8)
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-// Export untuk digunakan di file lain
-window.auth = auth;
-window.db = db;
-window.firebase = { auth, db };
+console.log("✅ Firebase initialized!");
