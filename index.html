@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etalase Ikan Hias</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: #0c4a6e;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .social-bar {
+            background: #0284c7;
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .social-link {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 30px;
+            transition: 0.3s;
+            background: rgba(255,255,255,0.2);
+        }
+        .social-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .golongan-card {
+            background: white;
+            border-radius: 28px;
+            margin-bottom: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15);
+        }
+        .golongan-header {
+            background: #1e3a5f;
+            color: white;
+            padding: 20px 25px;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        .ikan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 25px;
+        }
+        .ikan-card {
+            background: #fefce8;
+            border-radius: 20px;
+            padding: 20px;
+            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .ikan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -12px rgba(0,0,0,0.2);
+            border-color: #0284c7;
+        }
+        .ikan-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+        .ikan-price {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #15803d;
+            margin: 12px 0;
+        }
+        .shopee-btn {
+            display: inline-block;
+            background: #ee4d2d;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .shopee-btn:hover {
+            background: #d93a1a;
+            transform: scale(1.02);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #64748b;
+        }
+        .loading-state {
+            text-align: center;
+            padding: 60px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0c4a6e;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        footer {
+            background: #0f172a;
+            color: #94a3b8;
+            text-align: center;
+            padding: 25px;
+            margin-top: 40px;
+        }
+        .admin-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #0f172a;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-size: 14px;
+            text-decoration: none;
+            opacity: 0.7;
+            z-index: 999;
+        }
+        .admin-badge:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header" id="header">
+        <h1>🐠 Memuat...</h1>
+        <p>Loading...</p>
+    </div>
+
+    <div class="social-bar" id="socialBar">
+        Memuat social media...
+    </div>
+
+    <div class="container" id="container">
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px;">Memuat etalase...</p>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 Platform Jual Beli Ikan Hias | Belanja aman melalui Shopee
+    </footer>
+
+    <a href="admin-login.html" class="admin-badge" target="_blank">🔧 Admin</a>
+
+    <script src="firebase-config.js"></script>
+    <script>
+        async function loadData() {
+            try {
+                // Load settings
+                const settingsDoc = await db.collection('settings').doc('website').get();
+                let settings = settingsDoc.exists ? settingsDoc.data() : {
+                    title: "AquaNusantara Hias",
+                    description: "Toko ikan hias terpercaya",
+                    shopee: "aquanusantara",
+                    instagram: "aquanusantara",
+                    tiktok: "aquanusantara",
+                    whatsapp: "628123456789"
+                };
+
+                // Update header
+                document.title = settings.title + " - Etalase Ikan Hias";
+                document.getElementById('header').innerHTML = `
+                    <h1>🐠 ${settings.title}</h1>
+                    <p>${settings.description}</p>
+                `;
+
+                // Social media
+                const waLink = `https://wa.me/${settings.whatsapp}`;
+                document.getElementById('socialBar').innerHTML = `
+                    <a href="https://shopee.co.id/${settings.shopee}" class="social-link" target="_blank">🛒 Shopee: ${settings.shopee}</a>
+                    <a href="https://instagram.com/${settings.instagram}" class="social-link" target="_blank">📷 Instagram: @${settings.instagram}</a>
+                    <a href="https://tiktok.com/@${settings.tiktok}" class="social-link" target="_blank">🎵 TikTok: @${settings.tiktok}</a>
+                    <a href="${waLink}" class="social-link" target="_blank">💬 WhatsApp: ${settings.whatsapp}</a>
+                `;
+
+                // Load golongan & ikan
+                const snapshot = await db.collection('golongan').orderBy('createdAt', 'asc').get();
+                const golonganList = [];
+                snapshot.forEach(doc => {
+                    golonganList.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                const container = document.getElementById('container');
+                if (golonganList.length === 0) {
+                    container.innerHTML = '<div class="empty-state">🐟 Belum ada produk, akan segera hadir!</div>';
+                    return;
+                }
+
+                let html = '';
+                golonganList.forEach(gol => {
+                    html += `<div class="golongan-card">
+                                <div class="golongan-header">🐟 ${gol.nama}</div>`;
+                    
+                    if (!gol.ikan || gol.ikan.length === 0) {
+                        html += `<div class="empty-state" style="padding: 40px;">✨ Belum ada ikan di golongan ini ✨</div>`;
+                    } else {
+                        html += `<div class="ikan-grid">`;
+                        gol.ikan.forEach(ikan => {
+                            html += `<div class="ikan-card">
+                                        <div class="ikan-name">${ikan.nama}</div>
+                                        <div class="ikan-price">Rp ${ikan.harga.toLocaleString()}</div>
+                                        <a href="${ikan.linkShopee}" class="shopee-btn" target="_blank">🛒 Beli di Shopee →</a>
+                                     </div>`;
+                        });
+                        html += `</div>`;
+                    }
+                    html += `</div>`;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading data:", error);
+                document.getElementById('container').innerHTML = `
+                    <div class="empty-state">
+                        ❌ Gagal memuat data. Pastikan koneksi internet dan konfigurasi Firebase benar.
+                    </div>
+                `;
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

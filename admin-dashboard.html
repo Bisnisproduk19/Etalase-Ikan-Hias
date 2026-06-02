@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Ikan Hias</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+        }
+        .navbar {
+            background: #1e293b;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .navbar h2 {
+            color: #fff;
+        }
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .card h3 {
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #334155;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-top: 5px;
+        }
+        button.danger {
+            background: #ef4444;
+        }
+        button.warning {
+            background: #f59e0b;
+        }
+        .golongan-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0ea5e9;
+        }
+        .golongan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .golongan-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0c4a6e;
+        }
+        .ikan-list {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .ikan-item {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid #e2e8f0;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0ea5e9;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .preview-btn {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+        @media (max-width: 768px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h2>🐠 Admin Panel - Ikan Hias</h2>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <div class="container">
+        <div class="admin-grid">
+            <!-- Setting Website -->
+            <div class="card">
+                <h3>⚙️ Pengaturan Website & Social Media</h3>
+                <div class="form-group">
+                    <label>Title Website</label>
+                    <input type="text" id="webTitle" placeholder="Nama toko Anda">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi Website</label>
+                    <textarea id="webDesc" rows="3" placeholder="Deskripsi toko..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Username Shopee</label>
+                    <input type="text" id="shopeeName" placeholder="shopee_username">
+                </div>
+                <div class="form-group">
+                    <label>Username Instagram</label>
+                    <input type="text" id="instagramName" placeholder="instagram_username">
+                </div>
+                <div class="form-group">
+                    <label>Username TikTok</label>
+                    <input type="text" id="tiktokName" placeholder="tiktok_username">
+                </div>
+                <div class="form-group">
+                    <label>Nomor WhatsApp (62xxx)</label>
+                    <input type="text" id="whatsappNumber" placeholder="628123456789">
+                </div>
+                <button onclick="saveSettings()">💾 Simpan Pengaturan</button>
+            </div>
+
+            <!-- Tambah Golongan -->
+            <div class="card">
+                <h3>📁 Kelola Golongan Ikan</h3>
+                <div class="form-group">
+                    <label>Nama Golongan Baru</label>
+                    <input type="text" id="newGolonganName" placeholder="Contoh: Ikan Air Tawar">
+                </div>
+                <button onclick="addGolongan()">➕ Tambah Golongan</button>
+                <hr style="margin: 20px 0;">
+                <label>Hapus Golongan</label>
+                <select id="deleteGolonganSelect" style="margin-bottom: 10px;"></select>
+                <button class="danger" onclick="deleteGolongan()">🗑️ Hapus Golongan</button>
+            </div>
+        </div>
+
+        <!-- Tambah Ikan -->
+        <div class="card">
+            <h3>🐟 Tambah Ikan ke Golongan</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Pilih Golongan</label>
+                    <select id="fishGolonganSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label>Nama Ikan</label>
+                    <input type="text" id="fishName" placeholder="Contoh: Arwana">
+                </div>
+                <div class="form-group">
+                    <label>Harga (Rp)</label>
+                    <input type="number" id="fishPrice" placeholder="500000">
+                </div>
+                <div class="form-group">
+                    <label>Link Shopee Produk</label>
+                    <input type="text" id="fishLink" placeholder="https://shopee.co.id/...">
+                </div>
+            </div>
+            <button onclick="addFish()">➕ Tambah Ikan</button>
+        </div>
+
+        <!-- Daftar Semua Data -->
+        <div class="card">
+            <h3>📋 Daftar Etalase Lengkap</h3>
+            <div id="dataPreview">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+            <a href="index.html" class="preview-btn" target="_blank">🔍 Lihat Etalase Customer</a>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script>
+        let currentData = {
+            settings: null,
+            golonganList: []
+        };
+
+        // Cek autentikasi
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "admin-login.html";
+            } else {
+                loadAllData();
+            }
+        });
+
+        async function logout() {
+            await auth.signOut();
+            window.location.href = "admin-login.html";
+        }
+
+        async function loadAllData() {
+            await loadSettings();
+            await loadGolongan();
+        }
+
+        async function loadSettings() {
+            try {
+                const doc = await db.collection('settings').doc('website').get();
+                if (doc.exists) {
+                    currentData.settings = doc.data();
+                } else {
+                    currentData.settings = {
+                        title: "AquaNusantara Hias",
+                        description: "Toko ikan hias terpercaya dengan berbagai jenis ikan eksotis dan berkualitas",
+                        shopee: "aquanusantara",
+                        instagram: "aquanusantara",
+                        tiktok: "aquanusantara",
+                        whatsapp: "628123456789"
+                    };
+                    await db.collection('settings').doc('website').set(currentData.settings);
+                }
+                // isi form
+                document.getElementById('webTitle').value = currentData.settings.title;
+                document.getElementById('webDesc').value = currentData.settings.description;
+                document.getElementById('shopeeName').value = currentData.settings.shopee;
+                document.getElementById('instagramName').value = currentData.settings.instagram;
+                document.getElementById('tiktokName').value = currentData.settings.tiktok;
+                document.getElementById('whatsappNumber').value = currentData.settings.whatsapp;
+            } catch (e) {
+                console.error("Error load settings:", e);
+            }
+        }
+
+        async function loadGolongan() {
+            try {
+                const snapshot = await db.collection('golongan').orderBy('createdAt', 'asc').get();
+                currentData.golonganList = [];
+                snapshot.forEach(doc => {
+                    currentData.golonganList.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                renderGolonganList();
+                updateSelects();
+            } catch (e) {
+                console.error("Error load golongan:", e);
+            }
+        }
+
+        async function saveSettings() {
+            const settings = {
+                title: document.getElementById('webTitle').value,
+                description: document.getElementById('webDesc').value,
+                shopee: document.getElementById('shopeeName').value,
+                instagram: document.getElementById('instagramName').value,
+                tiktok: document.getElementById('tiktokName').value,
+                whatsapp: document.getElementById('whatsappNumber').value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection('settings').doc('website').set(settings);
+            currentData.settings = settings;
+            alert("Pengaturan berhasil disimpan!");
+        }
+
+        async function addGolongan() {
+            const nama = document.getElementById('newGolonganName').value.trim();
+            if (!nama) return alert("Masukkan nama golongan!");
+            await db.collection('golongan').add({
+                nama: nama,
+                ikan: [],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById('newGolonganName').value = '';
+            await loadGolongan();
+            alert("Golongan berhasil ditambahkan!");
+        }
+
+        async function deleteGolongan() {
+            const select = document.getElementById('deleteGolonganSelect');
+            const golId = select.value;
+            if (!golId) return alert("Pilih golongan!");
+            if (confirm("Hapus golongan ini? Semua ikan di dalamnya juga akan terhapus!")) {
+                await db.collection('golongan').doc(golId).delete();
+                await loadGolongan();
+                alert("Golongan dihapus!");
+            }
+        }
+
+        async function addFish() {
+            const golId = document.getElementById('fishGolonganSelect').value;
+            const nama = document.getElementById('fishName').value.trim();
+            const harga = parseInt(document.getElementById('fishPrice').value);
+            const link = document.getElementById('fishLink').value.trim();
+
+            if (!golId || !nama || !harga) return alert("Lengkapi semua field!");
+
+            const golRef = db.collection('golongan').doc(golId);
+            const golDoc = await golRef.get();
+            const currentIkan = golDoc.data()?.ikan || [];
+
+            const newFish = {
+                id: Date.now().toString(),
+                nama: nama,
+                harga: harga,
+                linkShopee: link || "#"
+            };
+
+            await golRef.update({
+                ikan: [...currentIkan, newFish]
+            });
+
+            document.getElementById('fishName').value = '';
+            document.getElementById('fishPrice').value = '';
+            document.getElementById('fishLink').value = '';
+            await loadGolongan();
+            alert("Ikan berhasil ditambahkan!");
+        }
+
+        async function deleteFish(golId, fishId) {
+            if (!confirm("Hapus ikan ini?")) return;
+            const golRef = db.collection('golongan').doc(golId);
+            const golDoc = await golRef.get();
+            const currentIkan = golDoc.data()?.ikan || [];
+            const newIkan = currentIkan.filter(f => f.id !== fishId);
+            await golRef.update({ ikan: newIkan });
+            await loadGolongan();
+        }
+
+        async function editFish(golId, fishId) {
+            const golRef = db.collection('golongan').doc(golId);
+            const golDoc = await golRef.get();
+            const ikan = golDoc.data()?.ikan || [];
+            const fish = ikan.find(f => f.id === fishId);
+            if (!fish) return;
+
+            const newNama = prompt("Edit nama ikan:", fish.nama);
+            const newHarga = prompt("Edit harga:", fish.harga);
+            const newLink = prompt("Edit link Shopee:", fish.linkShopee);
+
+            if (newNama && newHarga) {
+                const updatedIkan = ikan.map(f => 
+                    f.id === fishId ? { ...f, nama: newNama, harga: parseInt(newHarga), linkShopee: newLink || f.linkShopee } : f
+                );
+                await golRef.update({ ikan: updatedIkan });
+                await loadGolongan();
+            }
+        }
+
+        function renderGolonganList() {
+            const container = document.getElementById('dataPreview');
+            if (currentData.golonganList.length === 0) {
+                container.innerHTML = '<p style="color:gray;">Belum ada golongan. Silakan tambah golongan.</p>';
+                return;
+            }
+
+            let html = '';
+            currentData.golonganList.forEach(gol => {
+                html += `<div class="golongan-item">
+                            <div class="golongan-header">
+                                <span class="golongan-title">🐠 ${gol.nama}</span>
+                            </div>`;
+                if (!gol.ikan || gol.ikan.length === 0) {
+                    html += `<p style="color:gray; margin-left:20px;">Belum ada ikan</p>`;
+                } else {
+                    html += `<div class="ikan-list">`;
+                    gol.ikan.forEach(ikan => {
+                        html += `<div class="ikan-item">
+                                    <div>
+                                        <strong>${ikan.nama}</strong><br>
+                                        Rp ${ikan.harga.toLocaleString()}<br>
+                                        <small>🔗 ${ikan.linkShopee.substring(0, 40)}</small>
+                                    </div>
+                                    <div>
+                                        <button class="warning" onclick="editFish('${gol.id}','${ikan.id}')">✏️ Edit</button>
+                                        <button class="danger" onclick="deleteFish('${gol.id}','${ikan.id}')">🗑️ Hapus</button>
+                                    </div>
+                                </div>`;
+                    });
+                    html += `</div>`;
+                }
+                html += `</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function updateSelects() {
+            const fishSelect = document.getElementById('fishGolonganSelect');
+            const deleteSelect = document.getElementById('deleteGolonganSelect');
+            
+            const options = currentData.golonganList.map(g => `<option value="${g.id}">${g.nama}</option>`).join('');
+            fishSelect.innerHTML = '<option value="">-- Pilih Golongan --</option>' + options;
+            deleteSelect.innerHTML = '<option value="">-- Pilih Golongan --</option>' + options;
+        }
+    </script>
+</body>
+</html>
