@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Etalase Ikan Hias</title>
+    <!-- Firebase SDK Versi 8 Compat - PASTI JALAN -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
@@ -164,6 +165,15 @@
         .admin-badge:hover {
             opacity: 1;
         }
+        .error-box {
+            background: #fee;
+            color: #c33;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px;
+            text-align: center;
+            border: 1px solid #fcc;
+        }
     </style>
 </head>
 <body>
@@ -192,7 +202,14 @@
     <script src="firebase-config.js"></script>
     <script>
         async function loadData() {
+            const container = document.getElementById('container');
+            
             try {
+                // Cek apakah firebase sudah terinisialisasi
+                if (typeof db === 'undefined') {
+                    throw new Error("Firebase belum terinisialisasi. Cek file firebase-config.js");
+                }
+                
                 // Load settings
                 const settingsDoc = await db.collection('settings').doc('website').get();
                 let settings = settingsDoc.exists ? settingsDoc.data() : {
@@ -230,9 +247,8 @@
                     });
                 });
 
-                const container = document.getElementById('container');
                 if (golonganList.length === 0) {
-                    container.innerHTML = '<div class="empty-state">🐟 Belum ada produk, akan segera hadir!</div>';
+                    container.innerHTML = '<div class="empty-state">🐟 Belum ada produk. Silakan login ke admin panel untuk menambahkan produk.</div>';
                     return;
                 }
 
@@ -258,16 +274,25 @@
                 });
                 container.innerHTML = html;
             } catch (error) {
-                console.error("Error loading data:", error);
-                document.getElementById('container').innerHTML = `
-                    <div class="empty-state">
-                        ❌ Gagal memuat data. Pastikan koneksi internet dan konfigurasi Firebase benar.
+                console.error("Error:", error);
+                container.innerHTML = `
+                    <div class="error-box">
+                        <strong>❌ Gagal memuat data</strong><br>
+                        Pesan error: ${error.message}<br><br>
+                        <small>Pastikan:<br>
+                        1. File firebase-config.js sudah diisi dengan API key yang benar<br>
+                        2. Firestore Database sudah dibuat di Firebase Console<br>
+                        3. Security Rules diset ke mode test<br>
+                        4. Koneksi internet aktif</small>
                     </div>
                 `;
             }
         }
 
-        loadData();
+        // Tunggu firebase selesai load
+        setTimeout(() => {
+            loadData();
+        }, 500);
     </script>
 </body>
 </html>
